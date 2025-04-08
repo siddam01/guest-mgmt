@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm start\""
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}

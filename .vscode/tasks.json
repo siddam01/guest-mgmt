@@ -1,0 +1,36 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Start Server with DB Debug",
+        "type": "shell",
+        "command": "cd server && npm run dev",
+        "problemMatcher": [],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        }
+      },
+      {
+        "label": "Check Collections",
+        "type": "shell",
+        "command": "node server/utils/db-status.js",
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        }
+      },
+      {
+        "label": "MongoDB Shell",
+        "type": "shell",
+        "command": "mongo guestmgmt",
+        "presentation": {
+          "reveal": "always"
+        }
+      }
+    ]
+  }
