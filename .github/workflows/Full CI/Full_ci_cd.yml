@@ -1,0 +1,87 @@
+name: CI/CD Pipeline (DevSecOps)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly scan on Sundays
+
+jobs:
+  lint:
+    name: Code Linting (Super-Linter)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Super-Linter
+        uses: github/super-linter@v5
+        env:
+          VALIDATE_ALL_CODEBASE: true
+
+  test:
+    name: Run Unit & Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Run Pytest
+        run: pytest
+
+  secrets-scan:
+    name: Secret Scanning (GitGuardian)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: GitGuardian Secrets Scan
+        uses: GitGuardian/ggshield-action@v1
+
+  trivy-scan:
+    name: Vulnerability Scan (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Trivy
+        run: |
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+          echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update && sudo apt-get install -y trivy
+      - name: Run Trivy Vulnerability Scan
+        run: trivy fs --exit-code 0 --severity HIGH,CRITICAL .
+
+  codeql-scan:
+    name: CodeQL Static Analysis (SAST)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: github/codeql-action/init@v2
+        with:
+          languages: 'python'
+      - uses: actions/checkout@v3
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  dependabot:
+    name: Dependency Update Check (Dependabot)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Dependabot is auto-configured via GitHub Settings
+        run: echo "Dependabot runs on PRs automatically"
+
+  deploy:
+    name: Deploy to Render/Vercel
+    needs: [lint, test, secrets-scan, trivy-scan, codeql-scan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy (Simulated for Now)
+        run: echo "Deployment step to Vercel/Render would go here"
+
